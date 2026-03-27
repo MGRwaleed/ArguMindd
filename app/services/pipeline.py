@@ -1,6 +1,6 @@
-from app.services.gemini_claims import extract_claims
+from app.services.groq_claims import extract_claims
 from app.services.tavily_research import research_claims
-from app.services.gemini_validator import validate_claims
+from app.services.groq_validator import validate_claims
 from app.services.scoring import calculate_score
 
 
