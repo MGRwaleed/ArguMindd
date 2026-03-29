@@ -6,6 +6,7 @@ import Support from './pages/Support';
 import Settings from './pages/Settings';
 import Systems from './pages/Systems';
 import Council from './pages/Council';
+import Archives from './pages/Archives';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path="/analytics"        element={<Systems />} />
         <Route path="/leaderboard"      element={<Council />} />
         <Route path="/"                 element={<Navigate to="/login" replace />} />
+        <Route path="/debates/history"  element={<Archives />} />
       </Routes>
     </Router>
   );
