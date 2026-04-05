@@ -1,9 +1,156 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* ═══════════════════════════════════════════════
+   ARGUMIND — GLOBAL TYPOGRAPHY SYSTEM
+   Abril Fatface (headings) + Poppins (body/UI)
+═══════════════════════════════════════════════ */
 
-@layer base {
-  body {
-    @apply antialiased text-gray-900 bg-gray-50;
+@import url('https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Root Variables ── */
+:root {
+  --font-heading: 'Abril Fatface', serif;
+  --font-body:    'Poppins', sans-serif;
+
+  /* Scale */
+  --text-xs:   0.65rem;   /* 10.4px — mono labels, badges */
+  --text-sm:   0.75rem;   /* 12px   — captions, sublabels */
+  --text-base: 0.875rem;  /* 14px   — body, forms, nav */
+  --text-md:   1rem;      /* 16px   — body emphasis */
+  --text-lg:   1.25rem;   /* 20px   — H3 / card titles */
+  --text-xl:   1.75rem;   /* 28px   — H2 / section heads */
+  --text-2xl:  2.5rem;    /* 40px   — H1 / page titles */
+  --text-3xl:  3.5rem;    /* 56px   — Hero headlines */
+  --text-4xl:  5rem;      /* 80px   — Landing hero */
+
+  /* Line heights */
+  --lh-tight:  1.1;
+  --lh-snug:   1.3;
+  --lh-normal: 1.6;
+  --lh-relaxed:1.75;
+
+  /* Letter spacing */
+  --ls-tight:  -0.02em;
+  --ls-normal:  0em;
+  --ls-wide:    0.05em;
+  --ls-wider:   0.1em;
+  --ls-widest:  0.2em;
+}
+
+/* ── Base ── */
+html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+
+body {
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: var(--lh-normal);
+}
+
+/* ── Heading Scale ── */
+h1, .h1 {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-tight);
+  font-weight: 400; /* Abril Fatface is inherently bold */
+}
+
+h2, .h2 {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--ls-tight);
+  font-weight: 400;
+}
+
+h3, .h3 {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--ls-normal);
+  font-weight: 400;
+}
+
+/* Hero override — use .hero-heading class for massive display text */
+.hero-heading {
+  font-family: var(--font-heading);
+  font-size: var(--text-3xl);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-tight);
+}
+
+/* ── Body & UI Elements ── */
+p, span, li, label, input, textarea, select, button, a,
+.nav-label, .tab-label, .card-body, .form-text {
+  font-family: var(--font-body);
+}
+
+/* Inputs & Forms */
+input, textarea, select {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 400;
+  line-height: var(--lh-normal);
+}
+
+input::placeholder, textarea::placeholder {
+  font-family: var(--font-body);
+  font-weight: 300;
+}
+
+/* Buttons */
+button {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 500;
+}
+
+/* Navigation */
+nav, .nav-item, .sidebar-label {
+  font-family: var(--font-body);
+  font-weight: 500;
+}
+
+/* ── Utility Classes ── */
+
+/* Headings */
+.font-heading { font-family: var(--font-heading) !important; }
+.font-body    { font-family: var(--font-body)    !important; }
+
+/* Sizes */
+.text-xs   { font-size: var(--text-xs);   }
+.text-sm   { font-size: var(--text-sm);   }
+.text-base { font-size: var(--text-base); }
+.text-md   { font-size: var(--text-md);   }
+.text-lg   { font-size: var(--text-lg);   }
+.text-xl   { font-size: var(--text-xl);   }
+.text-2xl  { font-size: var(--text-2xl);  }
+.text-3xl  { font-size: var(--text-3xl);  }
+.text-4xl  { font-size: var(--text-4xl);  }
+
+/* Weights */
+.font-light    { font-weight: 300; }
+.font-regular  { font-weight: 400; }
+.font-medium   { font-weight: 500; }
+.font-semibold { font-weight: 600; }
+.font-bold     { font-weight: 700; }
+
+/* ── Responsive Typography ── */
+@media (max-width: 768px) {
+  :root {
+    --text-3xl: 2.5rem;
+    --text-2xl: 2rem;
+    --text-xl:  1.5rem;
+    --text-lg:  1.125rem;
   }
 }
+
+@media (max-width: 480px) {
+  :root {
+    --text-3xl: 2rem;
+    --text-2xl: 1.75rem;
+    --text-xl:  1.25rem;
+  }
+}
+
