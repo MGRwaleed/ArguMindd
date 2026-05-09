@@ -4,7 +4,7 @@
 
 An AI-powered debate platform that listens, fact-checks, and judges arguments in real time.
 
-🔴 **Live** → [app.argumind.space](https://app.argumind.space)
+🔴 **Live** → [app.argumind.space](https://app.argumind.space) need to turn on the cloudfare tunnel
 
 ---
 
@@ -28,7 +28,7 @@ React · Node.js · FastAPI · MongoDB · Socket.IO · WebRTC · Deepgram · Gro
 
 Built by **Batch-8, CSE (Data Science)** — Global Institute of Engineering and Technology
 
-Waleed · Sameer · Moses · Zaid · Guide: Dr. Sara Ali
+Ghulam Rasool · Sameer · Zaid · Moses · Guide: Dr. Sara Ali
 
 ---
 
