@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/auth/';
+export const NODE_API = 'https://api.argumind.space';
+export const FASTAPI_URL = 'https://pipeline.argumind.space';
+
+const API_URL = `${NODE_API}/api/auth/`;
 
 // Register user
 const signup = async (userData) => {
@@ -32,10 +35,5 @@ const logout = () => {
   localStorage.removeItem('userInfo');
 };
 
-const authService = {
-  signup,
-  login,
-  logout,
-};
-
+const authService = { signup, login, logout };
 export default authService;

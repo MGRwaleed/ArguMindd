@@ -1,0 +1,18 @@
+tunnels:
+  - credentials-file: C:\Users\Admin\.cloudflared\35f52cf2-c9ec-4d07-9bab-2966732e85f2.json
+    ingress:
+      - hostname: api.argumind.space
+        service: http://localhost:5000
+      - service: http_status:404
+
+  - credentials-file: C:\Users\Admin\.cloudflared\700c54ee-a4b9-4621-bb08-a3f48e758bbe.json
+    ingress:
+      - hostname: app.argumind.space
+        service: http://localhost:5173
+      - service: http_status:404
+
+  - credentials-file: C:\Users\Admin\.cloudflared\b28e40cd-c76a-4f26-96d4-c553b07404b3.json
+    ingress:
+      - hostname: stream.argumind.space
+        service: http://localhost:5174
+      - service: http_status:404

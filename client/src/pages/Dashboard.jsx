@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   ChevronLeft, LogOut, Settings, HelpCircle,
@@ -6,26 +6,67 @@ import {
   Plus, ChevronRight, Sun, Moon,
   MessageSquare, Trophy, TrendingUp, Clock
 } from 'lucide-react';
-import authService from '../services/authService';
+import authService, { NODE_API } from '../services/authService';
 import { useTheme } from '../context/ThemeContext';
 
 export default function Dashboard() {
   const navigate  = useNavigate();
   const location  = useLocation();
   const { theme, mode, toggle } = useTheme();
-  const [sidebarOpen, setSidebarOpen]   = useState(true);
+  const [sidebarOpen, setSidebarOpen]       = useState(true);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [activeFilter, setActiveFilter] = useState('RECENT');
-  const user = JSON.parse(localStorage.getItem('userInfo') || '{}');
-  const t = theme;
+  const [activeFilter, setActiveFilter]     = useState('RECENT');
+  const [debates, setDebates]               = useState([]);
+  const [stats, setStats]                   = useState({ sessions: 0, avgScore: '—', active: 0, elo: '—' });
+  const [loadingDebates, setLoadingDebates] = useState(true);
 
+  const user = JSON.parse(localStorage.getItem('userInfo') || '{}');
+  const token = localStorage.getItem('userToken');
+  const t = theme;
   const SIDEBAR_W = sidebarOpen ? 200 : 56;
 
   const handleLogout = () => { authService.logout(); navigate('/login'); };
 
+  // ── Fetch debate history ──────────────────────────────────────────
+  useEffect(() => {
+    const fetchDebates = async () => {
+      try {
+        const res = await fetch(`${NODE_API}/api/debates`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setDebates(data);
+
+          // Compute stats from real data
+          const total    = data.length;
+          const scores   = data.map(d => Number(d.score)).filter(Boolean);
+          const avg      = scores.length ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) + '%' : '—';
+          const ongoing  = data.filter(d => d.status === 'active').length;
+          const wins     = data.filter(d => d.outcome === 'VICTORY').length;
+          const elo      = wins * 18; // simple ELO proxy until real ranking exists
+
+          setStats({ sessions: total, avgScore: avg, active: ongoing, elo });
+        }
+      } catch (err) {
+        console.error('Failed to fetch debates:', err);
+      } finally {
+        setLoadingDebates(false);
+      }
+    };
+    fetchDebates();
+  }, [token]);
+
+  // ── Filter debates ────────────────────────────────────────────────
+  const filteredDebates = debates.filter(d => {
+    if (activeFilter === 'VICTORY') return d.outcome === 'VICTORY';
+    if (activeFilter === 'DEFEAT')  return d.outcome === 'DEFEAT';
+    return true; // RECENT — show all
+  }).slice(0, 4);
+
+  // ── CSS ───────────────────────────────────────────────────────────
   const css = `
     * { box-sizing: border-box; }
-
     @keyframes fadeUp {
       from { opacity:0; transform:translateY(16px); }
       to   { opacity:1; transform:translateY(0); }
@@ -43,7 +84,6 @@ export default function Dashboard() {
       from { opacity:0; transform:scale(0.95) translateY(8px); }
       to   { opacity:1; transform:scale(1) translateY(0); }
     }
-
     .nav-btn {
       width:100%; display:flex; align-items:center; gap:12px;
       padding:10px 16px; border:none; background:transparent;
@@ -53,7 +93,6 @@ export default function Dashboard() {
       border-left:2px solid transparent; color: ${t.textMuted};
     }
     .nav-btn:hover { background: ${t.accentBg}; border-left-color: ${t.accent}; color: ${t.text}; }
-
     .stat-card {
       padding: 28px 24px; background: ${t.surface}; border: 1px solid ${t.border};
       border-radius: 4px; transition: all 0.25s ease; cursor: default;
@@ -65,7 +104,6 @@ export default function Dashboard() {
     }
     .stat-card:hover { border-color:${t.accentBorder}; box-shadow:${t.cardHoverShadow}; transform:translateY(-2px); }
     .stat-card:hover::before { transform:scaleX(1); }
-
     .top-tab {
       padding: 8px 20px; background: transparent; border: 1px solid ${t.border};
       border-radius: 4px; font-family: var(--font-body); font-size: 0.7rem;
@@ -74,7 +112,6 @@ export default function Dashboard() {
     }
     .top-tab:hover { border-color:${t.accent}; color:${t.text}; background:${t.accentSoft}; }
     .top-tab.active { background:${t.accentBg}; border-color:${t.accent}; color:${t.accent}; font-weight:700; }
-
     .debate-row {
       display:grid; grid-template-columns:1fr 140px 100px 90px 32px;
       gap:16px; align-items:center; padding:16px 20px;
@@ -82,7 +119,6 @@ export default function Dashboard() {
     }
     .debate-row:hover { background: ${t.accentSofter}; }
     .debate-row:last-child { border-bottom:none; }
-
     .theme-toggle {
       width:44px; height:24px; background:${t.accentBg}; border:1px solid ${t.accent};
       border-radius:12px; cursor:pointer; position:relative; transition:all 0.3s;
@@ -93,7 +129,6 @@ export default function Dashboard() {
       transition:transform 0.3s; transform:translateX(${mode === 'light' ? '20px' : '0px'});
       display:flex; align-items:center; justify-content:center;
     }
-
     .modal-overlay {
       position:fixed; inset:0; background:rgba(0,0,0,0.6);
       backdrop-filter:blur(4px); z-index:100;
@@ -124,7 +159,6 @@ export default function Dashboard() {
       text-transform:uppercase; cursor:pointer; transition:all 0.2s;
     }
     .btn-confirm:hover { background:#c2410c; transform:translateY(-1px); box-shadow:0 4px 12px rgba(180,83,9,0.4); }
-
     .fade-1 { animation:fadeUp 0.7s 0.05s ease forwards; opacity:0; }
     .fade-2 { animation:fadeUp 0.7s 0.15s ease forwards; opacity:0; }
     .fade-3 { animation:fadeUp 0.7s 0.25s ease forwards; opacity:0; }
@@ -145,17 +179,10 @@ export default function Dashboard() {
   ];
 
   const statCards = [
-    { icon: MessageSquare, value: '42',    label: 'Active Sessions',  sub: '+4 this week' },
-    { icon: Trophy,        value: '89.4%', label: 'Avg Score',        sub: 'Top 7% globally' },
-    { icon: TrendingUp,    value: '12',    label: 'Active Protocols', sub: 'Ongoing debates' },
-    { icon: Clock,         value: '742',   label: 'ELO Ranking',      sub: 'Global standing' },
-  ];
-
-  const mockDebates = [
-    { id:1, topic:'The Ethics of Neural Link Integration',          opponent:'ZAID MENCHO',    score:'92/100', outcome:'VICTORY' },
-    { id:2, topic:'Decentralized Governance in Mars Colonies',      opponent:'SAMEER RONALDO', score:'41/100', outcome:'DEFEAT'  },
-    { id:3, topic:'Consciousness via Computational Work',           opponent:'MOSES MESSI',    score:'78/100', outcome:'VICTORY' },
-    { id:4, topic:'Quantum Entanglement as Communication Protocol', opponent:'SAFFAN SMARTIE', score:'85/100', outcome:'VICTORY' },
+    { icon: MessageSquare, value: String(stats.sessions), label: 'Total Sessions',    sub: 'All time' },
+    { icon: Trophy,        value: stats.avgScore,         label: 'Avg Score',         sub: 'Across all debates' },
+    { icon: TrendingUp,    value: String(stats.active),   label: 'Active Protocols',  sub: 'Ongoing debates' },
+    { icon: Clock,         value: String(stats.elo),      label: 'ELO Ranking',       sub: 'Global standing' },
   ];
 
   const particles = React.useMemo(() => Array.from({ length: 20 }, (_, i) => ({
@@ -175,7 +202,7 @@ export default function Dashboard() {
       ))}
       <div style={{ position:'fixed', top:'-100px', right:'-100px', width:'500px', height:'500px', background:`radial-gradient(circle, ${t.ambient} 0%, transparent 65%)`, pointerEvents:'none', zIndex:0 }}/>
 
-      {/* ── LOGOUT MODAL ── */}
+      {/* LOGOUT MODAL */}
       {showLogoutModal && (
         <div className="modal-overlay" onClick={() => setShowLogoutModal(false)}>
           <div className="modal-box" onClick={e => e.stopPropagation()}>
@@ -198,18 +225,9 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ── SIDEBAR ── */}
-      <aside style={{
-        position:'fixed', top:0, left:0, zIndex:20,
-        display:'flex', flexDirection:'column',
-        width: `${SIDEBAR_W}px`, height:'100vh', flexShrink:0,
-        background: t.surface, borderRight:`1px solid ${t.border}`,
-        transition:'width 0.3s ease, background 0.3s ease',
-        overflow:'hidden',
-      }}>
+      {/* SIDEBAR */}
+      <aside style={{ position:'fixed', top:0, left:0, zIndex:20, display:'flex', flexDirection:'column', width:`${SIDEBAR_W}px`, height:'100vh', flexShrink:0, background:t.surface, borderRight:`1px solid ${t.border}`, transition:'width 0.3s ease, background 0.3s ease', overflow:'hidden' }}>
         <div style={{ position:'absolute', top:0, left:0, right:0, height:'3px', background: t.accent }}/>
-
-        {/* Logo */}
         <div style={{ padding:'20px 16px', borderBottom:`1px solid ${t.border}`, display:'flex', alignItems:'center', gap:'10px', flexShrink:0 }}>
           <div style={{ width:'32px', height:'32px', background: t.accent, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', borderRadius:'4px', boxShadow:`0 0 12px ${t.accentGlow}` }}>
             <span style={{ fontFamily:'var(--font-body)', fontSize:'0.55rem', fontWeight:700, color:'#FEF9F3' }}>AM</span>
@@ -220,8 +238,6 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-
-        {/* Nav */}
         <nav style={{ flex:1, padding:'12px 0', overflowY:'auto' }}>
           {navItems.map(({ icon:Icon, label, sub, path }) => {
             const isActive = location.pathname === path;
@@ -239,8 +255,6 @@ export default function Dashboard() {
             );
           })}
         </nav>
-
-        {/* Bottom */}
         <div style={{ padding:'8px 0', borderTop:`1px solid ${t.border}`, flexShrink:0 }}>
           {sidebarOpen && (
             <div style={{ padding:'10px 16px 14px', overflow:'hidden', whiteSpace:'nowrap' }}>
@@ -256,8 +270,6 @@ export default function Dashboard() {
             <LogOut size={14} style={{ flexShrink:0 }}/>{sidebarOpen && <span>Logout</span>}
           </button>
         </div>
-
-        {/* Collapse toggle — moved inside sidebar, no negative right */}
         <button onClick={() => setSidebarOpen(!sidebarOpen)}
           style={{ position:'absolute', bottom:'50%', right:0, width:'20px', height:'40px', border:`1px solid ${t.border}`, borderRight:'none', background: t.surface, color: t.textMuted, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', borderRadius:'4px 0 0 4px', zIndex:30, transition:'background 0.2s' }}
           onMouseEnter={e => e.currentTarget.style.background = t.accentBg}
@@ -266,7 +278,7 @@ export default function Dashboard() {
         </button>
       </aside>
 
-      {/* ── MAIN — offset by sidebar width ── */}
+      {/* MAIN */}
       <div style={{ flex:1, display:'flex', flexDirection:'column', overflowY:'auto', position:'relative', zIndex:10, marginLeft:`${SIDEBAR_W}px`, transition:'margin-left 0.3s ease' }}>
 
         <header style={{ position:'sticky', top:0, zIndex:20, padding:'0 40px', display:'flex', alignItems:'center', justifyContent:'space-between', background: t.surface, borderBottom:`2px solid ${t.accent}`, height:'60px', transition:'background 0.3s ease' }}>
@@ -286,7 +298,7 @@ export default function Dashboard() {
               </button>
               <Moon size={13} style={{ color: mode === 'dark' ? t.accent : t.textFaint, transition:'color 0.3s' }}/>
             </div>
-            <button onClick={() => navigate('/debate/new')}
+            <button onClick={() => navigate('/debate-room')}
               style={{ padding:'10px 24px', background: t.accent, border:'none', borderRadius:'4px', color:'#FEF9F3', fontFamily:'var(--font-body)', fontSize:'0.75rem', fontWeight:600, letterSpacing:'0.08em', textTransform:'uppercase', cursor:'pointer', transition:'all 0.2s' }}
               onMouseEnter={e => { e.currentTarget.style.background = t.accentHover; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = `0 4px 12px ${t.accentGlow}`; }}
               onMouseLeave={e => { e.currentTarget.style.background = t.accent; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
@@ -303,6 +315,7 @@ export default function Dashboard() {
             </h1>
           </div>
 
+          {/* STAT CARDS — live data */}
           <div className="fade-2" style={{ display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:'16px' }}>
             {statCards.map(({ icon:Icon, value, label, sub }, i) => (
               <div key={i} className="stat-card">
@@ -312,12 +325,15 @@ export default function Dashboard() {
                   </div>
                   <span style={{ fontFamily:'var(--font-body)', fontSize:'0.6rem', letterSpacing:'0.1em', color: t.textFaint, textTransform:'uppercase', fontWeight:500 }}>{sub}</span>
                 </div>
-                <div style={{ fontFamily:'var(--font-heading)', fontSize:'var(--text-2xl)', color: t.text, lineHeight:1 }}>{value}</div>
+                <div style={{ fontFamily:'var(--font-heading)', fontSize:'var(--text-2xl)', color: t.text, lineHeight:1 }}>
+                  {loadingDebates ? '...' : value}
+                </div>
                 <div style={{ fontFamily:'var(--font-body)', fontSize:'0.65rem', letterSpacing:'0.08em', color: t.textMuted, marginTop:'10px', textTransform:'uppercase', fontWeight:500 }}>{label}</div>
               </div>
             ))}
           </div>
 
+          {/* BANNER */}
           <div className="fade-3" style={{ position:'relative', padding:'56px 48px', overflow:'hidden', border:`1px solid ${t.border}`, background: t.bannerGradient, borderRadius:'4px' }}>
             <div style={{ position:'absolute', top:0, left:0, right:0, height:'3px', background: t.topbarGradient }}/>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:'48px', flexWrap:'wrap' }}>
@@ -333,7 +349,7 @@ export default function Dashboard() {
                   Submit your argument. Let the AI judge decide.<br/>Fair analysis. Unbiased verdicts.
                 </p>
               </div>
-              <button onClick={() => navigate('/debate/new')}
+              <button onClick={() => navigate('/debate-room')}
                 style={{ padding:'16px 36px', background: t.accent, border:'none', borderRadius:'4px', color:'#FEF9F3', fontFamily:'var(--font-body)', fontSize:'0.875rem', fontWeight:600, letterSpacing:'0.08em', textTransform:'uppercase', cursor:'pointer', transition:'all 0.2s', whiteSpace:'nowrap' }}
                 onMouseEnter={e => { e.currentTarget.style.background = t.accentHover; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = `0 8px 20px ${t.accentGlow}`; }}
                 onMouseLeave={e => { e.currentTarget.style.background = t.accent; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
@@ -342,6 +358,7 @@ export default function Dashboard() {
             </div>
           </div>
 
+          {/* SESSION HISTORY — live data */}
           <div className="fade-4">
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'24px' }}>
               <div style={{ display:'flex', alignItems:'center', gap:'20px' }}>
@@ -355,7 +372,8 @@ export default function Dashboard() {
                   ))}
                 </div>
               </div>
-              <button style={{ fontFamily:'var(--font-body)', fontSize:'0.75rem', letterSpacing:'0.08em', color: t.textMuted, background:'transparent', border:'none', cursor:'pointer', transition:'color 0.2s', fontWeight:500 }}
+              <button onClick={() => navigate('/debates/history')}
+                style={{ fontFamily:'var(--font-body)', fontSize:'0.75rem', letterSpacing:'0.08em', color: t.textMuted, background:'transparent', border:'none', cursor:'pointer', transition:'color 0.2s', fontWeight:500 }}
                 onMouseEnter={e => e.target.style.color = t.accent}
                 onMouseLeave={e => e.target.style.color = t.textMuted}>VIEW ALL →</button>
             </div>
@@ -367,18 +385,24 @@ export default function Dashboard() {
             </div>
 
             <div style={{ border:`1px solid ${t.border}`, borderTop:'none' }}>
-              {mockDebates.map(d => (
-                <div key={d.id} className="debate-row">
-                  <p style={{ fontFamily:'var(--font-body)', fontSize:'0.9rem', fontWeight:500, color: t.text, lineHeight:1.4 }}>{d.topic}</p>
-                  <span style={{ fontFamily:'var(--font-body)', fontSize:'0.8rem', color: t.textMuted, fontWeight:400 }}>{d.opponent}</span>
-                  <span style={{ fontFamily:'var(--font-body)', fontSize:'0.85rem', color: t.text, fontWeight:600 }}>{d.score}</span>
-                  <span style={{ fontFamily:'var(--font-body)', fontSize:'0.75rem', color: d.outcome === 'VICTORY' ? t.victory : t.defeat, fontWeight:700 }}>{d.outcome}</span>
-                  <ChevronRight size={14} style={{ color: t.textMuted }}/>
-                </div>
-              ))}
+              {loadingDebates ? (
+                <div style={{ padding:'32px', textAlign:'center', fontFamily:'var(--font-body)', fontSize:'0.8rem', color: t.textMuted }}>Loading sessions...</div>
+              ) : filteredDebates.length === 0 ? (
+                <div style={{ padding:'32px', textAlign:'center', fontFamily:'var(--font-body)', fontSize:'0.8rem', color: t.textMuted }}>No debates found. Start your first session.</div>
+              ) : (
+                filteredDebates.map((d, i) => (
+                  <div key={d._id || i} className="debate-row">
+                    <p style={{ fontFamily:'var(--font-body)', fontSize:'0.9rem', fontWeight:500, color: t.text, lineHeight:1.4 }}>{d.topic}</p>
+                    <span style={{ fontFamily:'var(--font-body)', fontSize:'0.8rem', color: t.textMuted, fontWeight:400 }}>{d.opponent || '—'}</span>
+                    <span style={{ fontFamily:'var(--font-body)', fontSize:'0.85rem', color: t.text, fontWeight:600 }}>{d.score || '—'}</span>
+                    <span style={{ fontFamily:'var(--font-body)', fontSize:'0.75rem', color: d.outcome === 'VICTORY' ? t.victory : t.defeat, fontWeight:700 }}>{d.outcome || '—'}</span>
+                    <ChevronRight size={14} style={{ color: t.textMuted }}/>
+                  </div>
+                ))
+              )}
             </div>
 
-            <button onClick={() => navigate('/debate/new')}
+            <button onClick={() => navigate('/debate-room')}
               style={{ marginTop:'20px', width:'100%', padding:'14px', background:'transparent', border:`1px solid ${t.border}`, borderRadius:'4px', color: t.textMuted, fontFamily:'var(--font-body)', fontSize:'0.75rem', letterSpacing:'0.08em', textTransform:'uppercase', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:'10px', transition:'all 0.2s', fontWeight:500 }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = t.accent; e.currentTarget.style.color = t.accent; e.currentTarget.style.background = t.accentSoft; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = t.border; e.currentTarget.style.color = t.textMuted; e.currentTarget.style.background = 'transparent'; }}>

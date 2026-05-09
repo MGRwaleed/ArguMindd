@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="chat-overrides.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ArgumInd</title>
+  </head>
+  <body>
+
+    <!-- ═══════════════════════════════════════════
+         TOP HEADER BAR
+    ════════════════════════════════════════════ -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-logo">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5"/>
+            <path d="M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <span class="topbar-brand">ArguMind</span>
+        <!-- <span class="topbar-version">v2.0</span> -->
+      </div>
+
+      <div class="topbar-center">
+        <div class="debate-setup-inline" id="debateSetup">
+          <input id="debateTopic" type="text" class="topic-input" placeholder="Enter debate topic…" />
+          <input id="roundsInput" type="number" class="rounds-input" min="1" max="10" value="5" title="Number of rounds (1–10)" />
+          <select id="myStance" class="stance-select">
+            <option value="for">FOR</option>
+            <option value="against">AGAINST</option>
+          </select>
+          <span id="setupStatus" class="setup-status-inline"></span>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <div id="debateDuration" class="duration-badge">⏱ 00:00</div>
+        <div id="roundDisplay" class="round-badge"></div>
+        <div id="debateStatus" class="status-chip">Waiting to start…</div>
+        <div id="phaseTimer" class="phase-timer-badge"></div>
+        <button id="themeToggle" class="theme-toggle-btn" title="Toggle theme">🌙</button>
+        <div class="live-dot">
+          <span class="live-indicator"></span>
+          <span class="live-label">Live</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ═══════════════════════════════════════════
+         MAIN LAYOUT
+    ════════════════════════════════════════════ -->
+    <div class="app-body">
+
+      <!-- ── LEFT SIDEBAR ── -->
+      <aside class="sidebar sidebar-left">
+        <div class="sidebar-section">
+          <p class="sidebar-section-label">Connection</p>
+          <button id="webcamButton" class="btn btn-primary btn-block">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            Start Webcam
+          </button>
+          <button id="callButton" class="btn btn-secondary btn-block" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.5 19.79 19.79 0 01.11 .9a2 2 0 012-.22h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 8.09a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92v2z"/></svg>
+            Create Call
+          </button>
+          <div class="call-answer-row">
+            <input id="callInput" class="call-input" placeholder="Call ID…" />
+            <button id="answerButton" class="btn btn-secondary" disabled>Answer</button>
+          </div>
+          <button id="hangupButton" class="btn btn-danger btn-block" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.68 13.31a16 16 0 003.41 2.6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.79 19.79 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 013.34 2h3a2 2 0 011.72 1.25c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.09 9.4"/><line x1="23" y1="1" x2="1" y2="23"/></svg>
+            Hang Up
+          </button>
+        </div>
+
+        <div class="sidebar-section">
+          <p class="sidebar-section-label">Media</p>
+          <button id="toggleMic" class="btn btn-ghost btn-block" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+            🎙️ Mute
+          </button>
+          <button id="toggleCamera" class="btn btn-ghost btn-block" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            📷 Hide Camera
+          </button>
+        </div>
+
+        <div class="sidebar-section">
+          <p class="sidebar-section-label">Language</p>
+          <select id="languageSelect" class="lang-select">
+            <option value="en-US">🌐 English</option>
+            <option value="multi">🇮🇳 Hindi / Mixed</option>
+          </select>
+        </div>
+
+        <div class="sidebar-section">
+          <p class="sidebar-section-label">Debate</p>
+          <button id="startDebate" class="btn btn-accent btn-block" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Start Debate
+          </button>
+          <button id="endArgument" class="btn btn-warning btn-block" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            ✋ End Argument
+          </button>
+        </div>
+
+        <div class="sidebar-live-status">
+          <span class="pulse-dot"></span>
+          <span>AI Analysis Active</span>
+        </div>
+      </aside>
+
+      <!-- ── CENTER ── -->
+      <main class="main-content">
+
+        <!-- Videos Row -->
+        <section class="videos-section">
+          <div class="video-feed-label">
+            <span class="live-dot-red"></span>
+            <span>Live Feed</span>
+          </div>
+
+          <div class="videos">
+            <div class="video-panel" data-speaker="0">
+              <div class="video-card-header">
+                <div class="speaker-avatar speaker-avatar--cyan">S1</div>
+                <div class="speaker-meta">
+                  <span class="speaker-name" id="spk1Name">You</span>
+                  <span class="speaker-role">Local</span>
+                </div>
+                <div class="video-badge video-badge--cyan" id="spk1LiveBadge">
+                  <span class="live-dot-sm"></span> Live
+                </div>
+              </div>
+              <div class="video-wrapper">
+                <video id="webcamVideo" autoplay playsinline muted></video>
+                <div class="video-overlay-wave" id="wave1">
+                  <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="video-panel" data-speaker="1">
+              <div class="video-card-header">
+                <div class="speaker-avatar speaker-avatar--purple">S2</div>
+                <div class="speaker-meta">
+                  <span class="speaker-name">Opponent</span>
+                  <span class="speaker-role">Remote</span>
+                </div>
+                <div class="video-badge video-badge--purple" id="spk2LiveBadge">
+                  <span class="live-dot-sm live-dot-sm--purple"></span> Live
+                </div>
+              </div>
+              <div class="video-wrapper">
+                <video id="remoteVideo" autoplay playsinline></video>
+                <div class="video-overlay-wave video-overlay-wave--purple" id="wave2">
+                  <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Transcript + FactCheck Row -->
+        <section class="analysis-section">
+
+          <!-- Unified Transcript -->
+          <div class="analysis-col analysis-col--cyan">
+            <div class="panel-header">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="7" y2="18"/></svg>
+              <span>Transcript</span>
+              <span class="panel-pulse panel-pulse--cyan"></span>
+            </div>
+            <div class="transcript-box" id="transcriptBox">
+              <div class="transcript-content placeholder-active" id="transcriptContent">Transcript will appear here…</div>
+            </div>
+          </div>
+
+          <!-- Unified Fact Check -->
+          <div class="analysis-col analysis-col--purple">
+            <div class="panel-header panel-header--purple">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span>Fact Check</span>
+              <span class="panel-pulse panel-pulse--purple"></span>
+            </div>
+            <div class="factcheck-box" id="factCheckBox">
+              <div class="factcheck-content placeholder-active" id="factCheckContent">Waiting for argument…</div>
+            </div>
+          </div>
+
+        </section>
+
+      </main>
+
+      <!-- ── RIGHT SIDEBAR ── -->
+      <aside class="sidebar sidebar-right">
+        <div class="summary-panel-header">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span>Overall Summary</span>
+        </div>
+        <div class="summary-panel" id="summaryPanel">
+          <div class="summary-placeholder" id="summaryPlaceholder">
+            <div class="summary-placeholder-icon">📊</div>
+            <p>Results will appear after the debate ends.</p>
+          </div>
+          <div class="summary-content" id="overallSummary" style="display:none"></div>
+        </div>
+      </aside>
+
+    </div><!-- /app-body -->
+
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script type="module" src="/main.js"></script>
+
+    <div id="deepSummaryModal" class="deep-modal hidden">
+      <div class="deep-modal-content">
+        <div class="deep-header">
+          <span>✨ Debate Summary</span>
+          <button id="closeDeepSummary">✕</button>
+        </div>
+        <div id="deepSummaryContent"></div>
+      </div>
+    </div>
+
+  </body>
+</html>
