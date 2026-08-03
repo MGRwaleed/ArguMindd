@@ -4,7 +4,7 @@
 
 An AI-powered debate platform that listens, fact-checks, and judges arguments in real time.
 
-🔴 **Live** → [app.argumind.space](https://app.argumind.space) need to turn on the cloudfare tunnel
+🔴 **Live** → https://argumind-ten.vercel.app/ 
 
 ---
 
